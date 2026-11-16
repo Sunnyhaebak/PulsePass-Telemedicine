@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PulsePass Telemedicine — Patient Consultation & Outpatient Follow-up Platform</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Top Sticky Navigation Bar -->
+  <header class="navbar">
+    <div class="brand-wrapper">
+      <div class="brand-logo-icon">🩺</div>
+      <div>
+        <div class="brand-title">
+          PulsePass <span class="brand-badge">MVP v1.0</span>
+        </div>
+        <div style="font-size: 0.6875rem; color: var(--neutral-500); font-weight: 500;">
+          Hospital-Integrated Virtual Consultation Platform
+        </div>
+      </div>
+    </div>
+
+    <!-- Role Switcher -->
+    <div class="role-switcher-container">
+      <button class="role-btn patient-role active" data-role="PATIENT" onclick="store.setRole('PATIENT')">
+        <span>👤</span> Patient
+      </button>
+      <button class="role-btn doctor-role" data-role="DOCTOR" onclick="store.setRole('DOCTOR')">
+        <span>🩺</span> Doctor
+      </button>
+      <button class="role-btn admin-role" data-role="ADMIN" onclick="store.setRole('ADMIN')">
+        <span>🏥</span> Hospital Admin
+      </button>
+      <button class="role-btn" data-role="ARCH" onclick="store.state.currentRole='ARCH'; store.save(); renderAll();">
+        <span>📐</span> Architecture
+      </button>
+    </div>
+
+    <!-- Right Header Actions -->
+    <div class="nav-actions">
+      <!-- 7-Day Pass Countdown Pill -->
+      <div id="nav-pass-pill" class="pass-pill-badge" onclick="openRazorpayModal()" style="cursor: pointer;" title="Click to view pass details or renew">
+        <span class="pulse-dot"></span>
+        <span>Loading Pass...</span>
+      </div>
+
+      <!-- User Avatar Badge -->
+      <div class="user-avatar-badge" onclick="showToast('Active User: ' + store.state.currentUser.name + ' (' + store.state.currentUser.role + ')', 'success')">
+        <div id="nav-avatar-circle" class="avatar-circle">RV</div>
+        <div class="avatar-info">
+          <span id="nav-user-name" class="avatar-name">Rohan Verma</span>
+          <span id="nav-user-role" class="avatar-role">Patient</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="main-content">
+
+    <!-- ========================================== -->
+    <!-- VIEW 1: PATIENT PORTAL                    -->
+    <!-- ========================================== -->
+    <section id="patient-view" class="view-section active">
+      
+      <!-- Hero Section -->
+      <div class="hero-banner">
+        <div class="hero-tag">🏥 Outpatient Decongestion & Follow-up Care</div>
+        <h1 class="hero-title">Virtual Follow-up Consultations Without Long Hospital Queues</h1>
+        <p class="hero-desc">
+          Connect directly with your verified hospital specialist through a time-bound 7-day consultation pass.
+          Upload diagnostic reports privately, reserve a guaranteed 15-minute slot, and consult in real time.
+        </p>
+
+        <div class="hero-stats-row">
+          <div class="hero-stat-card">
+            <span class="hero-stat-val">₹500</span>
+            <span class="hero-stat-label">7-Day Multi-Query Pass</span>
+          </div>
+          <div class="hero-stat-card">
+            <span class="hero-stat-val">0 min</span>
+            <span class="hero-stat-label">Physical Travel / Waiting Time</span>
+          </div>
+          <div class="hero-stat-card">
+            <span class="hero-stat-val">100% Zero-Exposure</span>
+            <span class="hero-stat-label">Encrypted Pre-Signed Medical Vault</span>
+          </div>
+          <div class="hero-stat-card">
+            <span class="hero-stat-val">Zero Collision</span>
+            <span class="hero-stat-label">Redis Distributed Slot Locking</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active Pass Status Card -->
+      <div id="patient-pass-card" class="pass-status-card active-pass">
+        <div class="pass-info-col">
+          <h3 id="pass-card-title">🟢 Active 7-Day Consultation Pass (₹500)</h3>
+          <p id="pass-card-subtitle">Assigned to: Dr. Arvind Mehta • Metro Care Super-Speciality Hospital</p>
+        </div>
+        <div class="pass-timer-box">
+          <div style="text-align: right;">
+            <div style="font-size: 0.6875rem; color: var(--neutral-500); text-transform: uppercase; font-weight: 700;">Remaining Pass Window</div>
+            <div id="pass-timer-display" class="timer-digits">6d 20h 42m</div>
+          </div>
+          <button id="pass-action-btn" class="btn btn-outline btn-sm">Simulate Pass Expiry</button>
+        </div>
+      </div>
+
+      <!-- Quick Action Bar -->
+      <div style="display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap;">
+        <button class="btn btn-secondary" onclick="openModal('ai-triage-modal')">
+          <span>🤖</span> Fill AI Pre-Consultation Intake
+        </button>
+        <button class="btn btn-outline" onclick="openRazorpayModal()">
+          <span>💳</span> Purchase / Renew 7-Day Pass
+        </button>
+        <button class="btn btn-outline" onclick="document.getElementById('vault-section').scrollIntoView({behavior:'smooth'})">
+          <span>📁</span> Upload Medical Reports
+        </button>
+        <button class="btn btn-outline" onclick="document.getElementById('chat-section').scrollIntoView({behavior:'smooth'})">
+          <span>💬</span> Open Consultation Room
+        </button>
+      </div>
+
+      <!-- Specialists Directory -->
+      <div class="section-header">
+        <div class="section-title">
+          <span>🩺</span> Verified Hospital Specialists
+        </div>
+        <div class="filter-pills">
+          <button class="filter-chip active">All Departments</button>
+          <button class="filter-chip">Cardiology</button>
+          <button class="filter-chip">Pediatrics</button>
+          <button class="filter-chip">Orthopedics</button>
+          <button class="filter-chip">General Medicine</button>
+        </div>
+      </div>
+
+      <div id="doctors-list-grid" class="doctors-grid">
+        <!-- Rendered by JS -->
+      </div>
+
+      <!-- Concurrency-Safe Time-Slot Engine -->
+      <div id="slots-section" class="slots-container">
+        <div class="section-header">
+          <div>
+            <div class="section-title">
+              <span>📅</span> Claim Your 15-Minute Consultation Slot
+            </div>
+            <p style="font-size: 0.8125rem; color: var(--neutral-500); margin-top: 2px;">
+              Guaranteed turn order for <strong>Dr. Arvind Mehta</strong>. Powered by Redis distributed locking to prevent double bookings.
+            </p>
+          </div>
+          <div class="slot-date-selector">
+            <button class="date-pill active" data-date="Today" onclick="filterSlotDate('Today')">
+              <span>Today</span>
+              <small>Nov 16</small>
+            </button>
+            <button class="date-pill" data-date="Tomorrow" onclick="filterSlotDate('Tomorrow')">
+              <span>Tomorrow</span>
+              <small>Nov 17</small>
+            </button>
+          </div>
+        </div>
+
+        <div id="slots-grid" class="slots-grid">
+          <!-- Rendered by JS -->
+        </div>
+
+        <!-- Concurrency Demonstration Box -->
+        <div class="concurrency-demo-box">
+          <div>
+            <span class="concurrency-badge">🔒 Concurrency Lab</span>
+            <strong style="margin-left: 8px;">Simulate Concurrent Booking Collision:</strong>
+            <span style="color: var(--neutral-600); margin-left: 6px;">Test how Redis <code>SETNX</code> handles two patients clicking simultaneously.</span>
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="store.simulateConcurrencyRace('s3')">
+            ⚡ Simulate Race on Slot 05:30 PM
+          </button>
+        </div>
+      </div>
+
+      <!-- Medical Report Vault -->
+      <div id="vault-section" class="vault-container">
+        <div class="section-header">
+          <div>
+            <div class="section-title">
+              <span>🔐</span> Secure Medical Report Vault (Zero-Exposure S3)
+            </div>
+            <p style="font-size: 0.8125rem; color: var(--neutral-500); margin-top: 2px;">
+              Reports are uploaded directly to private cloud storage via 5-minute pre-signed URLs. Doctor reads via temporary authorized tokens.
+            </p>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="openModal('upload-report-modal')">
+            <span>+</span> Upload Lab Report / ECG
+          </button>
+        </div>
+
+        <div class="dropzone-box" onclick="openModal('upload-report-modal')">
+          <div class="dropzone-icon">📤</div>
+          <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 2px;">Click to Upload Diagnostic Reports</div>
+          <div style="font-size: 0.8125rem; color: var(--neutral-500);">Supported: PDF, JPEG, PNG (Blood Tests, X-Rays, MRI, Previous Prescriptions)</div>
+        </div>
+
+        <div id="patient-reports-list" class="reports-list">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+
+      <!-- Live Scoped Consultation Chat Room -->
+      <div id="chat-section">
+        <div class="section-header">
+          <div class="section-title">
+            <span>💬</span> Live Consultation Room
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-outline btn-sm" onclick="toggleVideoCall(true)">
+              <span>📹</span> Start Video Consult
+            </button>
+            <button class="btn btn-outline btn-sm" onclick="showToast('Audio call connecting to Dr. Arvind Mehta...', 'success')">
+              <span>📞</span> Audio Call
+            </button>
+          </div>
+        </div>
+
+        <div class="consultation-workspace" style="grid-template-columns: 1fr;">
+          <!-- Chat Window -->
+          <div class="chat-window">
+            
+            <!-- Video Overlay -->
+            <div id="video-call-overlay" class="video-overlay">
+              <div class="video-feed-box">
+                <div style="text-align: center;">
+                  <div style="font-size: 3.5rem; margin-bottom: 0.5rem;">👨‍⚕️</div>
+                  <h3 style="font-size: 1.25rem;">Dr. Arvind Mehta (Cardiologist)</h3>
+                  <div style="color: #38bdf8; font-size: 0.875rem;">HD Encrypted Video Consultation Active</div>
+                </div>
+                <div class="pip-feed">
+                  <span>You (Rohan)</span>
+                </div>
+              </div>
+              <div class="video-call-controls">
+                <button class="btn btn-outline btn-sm" style="color: white; border-color: rgba(255,255,255,0.3)">Mute Mic</button>
+                <button class="btn btn-outline btn-sm" style="color: white; border-color: rgba(255,255,255,0.3)">Turn Off Camera</button>
+                <button class="btn btn-danger btn-sm" onclick="toggleVideoCall(false)">End Video Call</button>
+              </div>
+            </div>
+
+            <!-- Pass Guard Banner -->
+            <div id="chat-guard-banner" class="chat-guard-overlay">
+              <!-- Rendered by JS -->
+            </div>
+
+            <div class="chat-header">
+              <div class="chat-user-status">
+                <div class="chat-status-indicator"></div>
+                <div>
+                  <div style="font-weight: 700; font-size: 0.95rem;">Dr. Arvind Mehta</div>
+                  <div style="font-size: 0.75rem; color: var(--neutral-500);">Senior Cardiologist • Metro Care Hospital</div>
+                </div>
+              </div>
+              <div class="chat-actions-header">
+                <button class="btn btn-ghost btn-sm" onclick="openModal('ai-triage-modal')">🤖 AI Triage</button>
+                <button class="btn btn-ghost btn-sm" onclick="openModal('upload-report-modal')">📎 Share Report</button>
+              </div>
+            </div>
+
+            <div id="chat-messages-box" class="chat-messages-box">
+              <!-- Rendered by JS -->
+            </div>
+
+            <div class="chat-input-bar">
+              <input type="text" id="chat-input" class="chat-input" placeholder="Type your follow-up query to the doctor...">
+              <button id="chat-send-btn" class="btn btn-primary" onclick="handleSendMessage()">
+                <span>Send</span> ➔
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ========================================== -->
+    <!-- VIEW 2: DOCTOR PORTAL                      -->
+    <!-- ========================================== -->
+    <section id="doctor-view" class="view-section">
+      <div class="section-header">
+        <div>
+          <h2 style="font-size: 1.5rem; font-weight: 800; color: var(--neutral-900);">
+            🩺 Doctor Outpatient Consultation Desk
+          </h2>
+          <p style="font-size: 0.875rem; color: var(--neutral-500);">
+            Logged in as <strong>Dr. Arvind Mehta, MD, DM (Cardiology)</strong> • Registration: <code>MCI-28491-DEL</code>
+          </p>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-success btn-sm" onclick="openPrescriptionModal()">
+            <span>📋</span> Issue Digital Prescription
+          </button>
+          <button class="btn btn-outline btn-sm" onclick="showToast('Consultation marked completed. Patient notified.', 'success')">
+            <span>✓</span> Mark Resolved
+          </button>
+        </div>
+      </div>
+
+      <!-- Doctor Stats Overview -->
+      <div class="stats-cards-grid">
+        <div class="metric-card">
+          <div class="metric-header">
+            <div class="metric-icon" style="background: #e0f2fe; color: #0284c7;">👥</div>
+            <span style="font-size: 0.75rem; color: #0284c7; font-weight: 700;">TODAY</span>
+          </div>
+          <div class="metric-value">6 Patients</div>
+          <div class="metric-label">Booked in Consultation Queue</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-header">
+            <div class="metric-icon" style="background: #dcfce7; color: #166534;">🟢</div>
+            <span style="font-size: 0.75rem; color: #166534; font-weight: 700;">CURRENT</span>
+          </div>
+          <div class="metric-value">Rohan Verma</div>
+          <div class="metric-label">Active Turn (Turn #1)</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-header">
+            <div class="metric-icon" style="background: #fef3c7; color: #92400e;">📁</div>
+            <span style="font-size: 0.75rem; color: #92400e; font-weight: 700;">REPORTS</span>
+          </div>
+          <div class="metric-value">3 Vault Files</div>
+          <div class="metric-label">Uploaded for Clinical Review</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-header">
+            <div class="metric-icon" style="background: #f3e8ff; color: #7e22ce;">💰</div>
+            <span style="font-size: 0.75rem; color: #7e22ce; font-weight: 700;">REVENUE</span>
+          </div>
+          <div class="metric-value">₹3,000</div>
+          <div class="metric-label">Today's 7-Day Pass Pool</div>
+        </div>
+      </div>
+
+      <!-- Split Desk Workspace -->
+      <div class="consultation-workspace">
+        
+        <!-- Left Pane: Patient Queue & Health Record -->
+        <div class="consultation-sidebar">
+          <div class="sidebar-header">
+            <h4>📋 Today's Patient Queue</h4>
+            <div style="font-size: 0.75rem; color: var(--neutral-500); margin-top: 2px;">
+              Auto-refreshed via WebSocket
+            </div>
+          </div>
+          
+          <div id="doctor-patient-queue">
+            <!-- Rendered by JS -->
+          </div>
+
+          <!-- Active Patient Medical Record Snapshot -->
+          <div style="padding: 1rem; border-top: 2px solid var(--neutral-200); background: #ffffff;">
+            <h5 style="font-size: 0.8125rem; font-weight: 700; text-transform: uppercase; color: var(--neutral-600); margin-bottom: 8px;">
+              Active Patient Health Card
+            </h5>
+            <div style="font-size: 0.8125rem; line-height: 1.5; color: var(--neutral-800);">
+              <div><strong>Name:</strong> Rohan Verma (38M)</div>
+              <div><strong>Blood Group:</strong> B+ Positive</div>
+              <div><strong>History:</strong> Stent Placement (LAD, 2024)</div>
+              <div><strong>Current Meds:</strong> Rosuvastatin 10mg, Telmisartan 40mg</div>
+            </div>
+
+            <h5 style="font-size: 0.8125rem; font-weight: 700; text-transform: uppercase; color: var(--neutral-600); margin-top: 12px; margin-bottom: 8px;">
+              Uploaded Reports Preview
+            </h5>
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <button class="btn btn-outline btn-sm" style="justify-content: flex-start;" onclick="previewReport('rep_001')">
+                <span>📄</span> Lipid Profile (Nov 2026)
+              </button>
+              <button class="btn btn-outline btn-sm" style="justify-content: flex-start;" onclick="previewReport('rep_002')">
+                <span>🩻</span> 12-Lead ECG Trace
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Pane: Live Doctor Chat Desk -->
+        <div class="chat-window">
+          <div id="doc-chat-guard-banner" class="chat-guard-overlay">
+            <!-- Rendered by JS -->
+          </div>
+
+          <div class="chat-header">
+            <div class="chat-user-status">
+              <div class="chat-status-indicator"></div>
+              <div>
+                <div style="font-weight: 700; font-size: 0.95rem;">Consulting: Rohan Verma</div>
+                <div style="font-size: 0.75rem; color: var(--neutral-500);">Pass ID: <code>pass_7d_9842</code> (Active)</div>
+              </div>
+            </div>
+            <div class="chat-actions-header">
+              <button class="btn btn-success btn-sm" onclick="openPrescriptionModal()">
+                <span>+ Rx</span> Write Prescription
+              </button>
+              <button class="btn btn-outline btn-sm" onclick="store.sendMessage('Please schedule an in-person follow-up ECG at the hospital next week.', 'TEXT')">
+                Quick Advice
+              </button>
+            </div>
+          </div>
+
+          <div id="doc-chat-messages-box" class="chat-messages-box">
+            <!-- Rendered by JS -->
+          </div>
+
+          <div class="chat-input-bar">
+            <input type="text" id="doc-chat-input" class="chat-input" placeholder="Type doctor clinical response or guidance...">
+            <button class="btn btn-primary" onclick="handleDoctorSendMessage()">
+              Send Reply
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- VIEW 3: HOSPITAL ADMIN DASHBOARD           -->
+    <!-- ========================================== -->
+    <section id="admin-view" class="view-section">
+      <div class="section-header">
+        <div>
+          <h2 style="font-size: 1.5rem; font-weight: 800; color: var(--neutral-900);">
+            🏥 Hospital & Platform Administration
+          </h2>
+          <p style="font-size: 0.875rem; color: var(--neutral-500);">
+            Metro Care Super-Speciality Hospital Network • Platform Operations & Doctor Verification
+          </p>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="openModal('doctor-onboard-modal')">
+          <span>+</span> Onboard New Doctor
+        </button>
+      </div>
+
+      <!-- Admin High-Level Metrics -->
+      <div class="stats-cards-grid">
+        <div class="metric-card">
+          <div class="metric-header">
+            <div class="metric-icon" style="background: #e0f2fe; color: #0284c7;">🎫</div>
+            <span class="metric-change up">↑ +18% this week</span>
+          </div>
+          <div id="admin-metric-passes" class="metric-value">148 Passes</div>
+          <div class="metric-label">Active 7-Day Passes Issued</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-header">
+            <div class="metric-icon" style="background: #dcfce7; color: #166534;">₹</div>
+            <span class="metric-change up">↑ Razorpay Webhook Sync</span>
+          </div>
+          <div id="admin-metric-revenue" class="metric-value">₹74,000</div>
+          <div class="metric-label">Gross Consultation Revenue</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-header">
+            <div class="metric-icon" style="background: #fef3c7; color: #92400e;">⏱️</div>
+            <span class="metric-change up">92% Utilization</span>
+          </div>
+          <div id="admin-metric-slots" class="metric-value">2 / 11 Slots</div>
+          <div class="metric-label">Today's Slot Occupancy</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-header">
+            <div class="metric-icon" style="background: #f3e8ff; color: #7e22ce;">🩺</div>
+            <span class="metric-change up">100% MCI Verified</span>
+          </div>
+          <div id="admin-metric-doctors" class="metric-value">4 Doctors</div>
+          <div class="metric-label">Onboarded Medical Specialists</div>
+        </div>
+      </div>
+
+      <!-- Doctors Roster Table -->
+      <div class="table-card">
+        <div style="padding: 1.25rem; border-bottom: 1px solid var(--neutral-200); display: flex; justify-content: space-between; align-items: center;">
+          <h3 style="font-size: 1.125rem; font-weight: 700;">Verified Medical Faculty & Clinic Rosters</h3>
+          <span style="font-size: 0.75rem; color: var(--neutral-500);">Role-Based Access Protected</span>
+        </div>
+        <div class="table-responsive">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>Doctor Name</th>
+                <th>Department</th>
+                <th>Reg. Number</th>
+                <th>Hospital Affiliation</th>
+                <th>Status</th>
+                <th>Pass Pricing</th>
+              </tr>
+            </thead>
+            <tbody id="admin-doctors-table-body">
+              <!-- Rendered by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Real-Time Audit Log & Security Events Stream -->
+      <div class="table-card">
+        <div style="padding: 1.25rem; border-bottom: 1px solid var(--neutral-200); display: flex; justify-content: space-between; align-items: center;">
+          <h3 style="font-size: 1.125rem; font-weight: 700;">🛡️ Real-Time Audit Log & Event Stream</h3>
+          <span style="font-size: 0.75rem; color: #059669; font-weight: 700;">● Live Stream Active</span>
+        </div>
+        <div id="admin-audit-logs-list" style="padding: 1rem 1.25rem; max-height: 250px; overflow-y: auto; background: #fafafa;">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ========================================== -->
+    <!-- VIEW 4: SYSTEM ARCHITECTURE & BLUEPRINTS   -->
+    <!-- ========================================== -->
+    <section id="architecture-view" class="view-section">
+      <div class="section-header">
+        <div>
+          <h2 style="font-size: 1.5rem; font-weight: 800; color: var(--neutral-900);">
+            📐 Production Architecture & Engineering Blueprint
+          </h2>
+          <p style="font-size: 0.875rem; color: var(--neutral-500);">
+            Full technical deep-dive into Concurrency Locks, S3 Vault, and WebSocket Session Guards.
+          </p>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="store.setRole('PATIENT')">
+          Back to Live App
+        </button>
+      </div>
+
+      <div class="arch-card">
+        <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom: 0.5rem;">
+          1. Distributed Slot-Locking Mechanism (Zero Double-Booking Guarantee)
+        </h3>
+        <p style="font-size: 0.875rem; color: var(--neutral-600); line-height: 1.6;">
+          When two patients click the same slot at the exact same millisecond, standard SQL queries without locks cause race conditions.
+          Our backend acquires a Redis distributed lock (<code>SET lock:slot:{slot_id} {uuid} NX PX 5000</code>) before executing a PostgreSQL row-locked transaction (<code>SELECT ... FOR UPDATE</code>).
+        </p>
+        <div class="code-block">
+// Redis Distributed Lock + PostgreSQL Row-Lock Transaction (NestJS Service)
+async bookSlot(slotId: string, patientId: string, passId: string) {
+  const lockKey = `lock:slot:${slotId}`;
+  const lockAcquired = await this.redis.set(lockKey, patientId, 'PX', 5000, 'NX');
+  if (!lockAcquired) {
+    throw new ConflictException('Slot is currently locked by a concurrent booking transaction');
+  }
+
+  try {
+    return await this.prisma.$transaction(async (tx) => {
+      const slot = await tx.$queryRaw`SELECT * FROM time_slots WHERE id = ${slotId} FOR UPDATE`;
+      if (slot.status !== 'AVAILABLE') throw new BadRequestException('Slot already taken');
+      
+      return tx.timeSlot.update({
+        where: { id: slotId },
+        data: { status: 'BOOKED', patientId, passId }
+      });
+    });
+  } finally {
+    // Release Redis lock safely via Lua script
+    await this.redis.eval(UNLOCK_SCRIPT, 1, lockKey, patientId);
+  }
+}
+        </div>
+      </div>
+
+      <div class="arch-card">
+        <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom: 0.5rem;">
+          2. Zero-Exposure Medical File Pipeline (AWS S3 Pre-Signed URLs)
+        </h3>
+        <p style="font-size: 0.875rem; color: var(--neutral-600); line-height: 1.6;">
+          Medical files (Blood panels, ECGs, X-rays) never traverse the Node.js server memory or reside in public buckets.
+          The backend validates RBAC permissions and generates a 5-minute pre-signed <code>PutObject</code> URL for upload and a 10-minute <code>GetObject</code> URL for the assigned doctor.
+        </p>
+        <div class="code-block">
+// S3 Zero-Exposure Pre-Signed URL Pipeline
+async generateUploadUrl(patientId: string, passId: string, fileName: string) {
+  // Validate active 7-day pass
+  await this.passGuard.validateActivePass(patientId, passId);
+  
+  const objectKey = `vault/${patientId}/${crypto.randomUUID()}-${fileName}`;
+  const presignedUrl = await getSignedUrl(this.s3Client, new PutObjectCommand({
+    Bucket: process.env.MEDICAL_VAULT_BUCKET,
+    Key: objectKey,
+    ServerSideEncryption: 'AES256',
+  }), { expiresIn: 300 }); // 5 minutes TTL
+
+  return { uploadUrl: presignedUrl, objectKey };
+}
+        </div>
+      </div>
+
+      <div class="arch-card">
+        <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom: 0.5rem;">
+          3. WebSocket Gateway Session & Pass Expiry Enforcement
+        </h3>
+        <p style="font-size: 0.875rem; color: var(--neutral-600); line-height: 1.6;">
+          Every incoming WebSocket message checks a Redis-cached pass TTL (<code>pass:active:{pass_id}</code>).
+          Expired passes are locked at the gateway layer without incurring database load.
+        </p>
+        <div class="code-block">
+@SubscribeMessage('sendMessage')
+async handleMessage(@ConnectedSocket() client: Socket, @MessageBody() dto: SendMessageDto) {
+  const isPassActive = await this.redis.get(`pass:active:${dto.passId}`);
+  if (!isPassActive) {
+    client.emit('passExpiredError', { message: '7-Day Pass expired. Renew to message doctor.' });
+    return;
+  }
+  
+  const savedMsg = await this.chatService.saveMessage(dto);
+  this.server.to(`pass_${dto.passId}`).emit('newMessage', savedMsg);
+}
+        </div>
+      </div>
+
+      <!-- Core PostgreSQL Schema Visualizer -->
+      <div class="arch-card">
+        <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom: 0.5rem;">
+          4. Relational Database Schema (PostgreSQL)
+        </h3>
+        <div class="table-responsive">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>Table</th>
+                <th>Primary Key</th>
+                <th>Foreign Keys</th>
+                <th>Key Columns</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>users</strong></td>
+                <td><code>id (UUID)</code></td>
+                <td><code>hospital_id</code></td>
+                <td>phone, email, password_hash, role (PATIENT | DOCTOR | ADMIN)</td>
+              </tr>
+              <tr>
+                <td><strong>doctor_profiles</strong></td>
+                <td><code>id (UUID)</code></td>
+                <td><code>user_id</code></td>
+                <td>specialization, reg_number, consultation_fee (₹500), pass_duration_days (7)</td>
+              </tr>
+              <tr>
+                <td><strong>consultation_passes</strong></td>
+                <td><code>id (UUID)</code></td>
+                <td><code>patient_id, doctor_id</code></td>
+                <td>payment_order_id, amount_paid, starts_at, expires_at, status (ACTIVE | EXPIRED)</td>
+              </tr>
+              <tr>
+                <td><strong>time_slots</strong></td>
+                <td><code>id (UUID)</code></td>
+                <td><code>doctor_id, patient_id, pass_id</code></td>
+                <td>start_time, end_time, status (AVAILABLE | BOOKED | COMPLETED | CANCELLED)</td>
+              </tr>
+              <tr>
+                <td><strong>medical_reports</strong></td>
+                <td><code>id (UUID)</code></td>
+                <td><code>patient_id, pass_id</code></td>
+                <td>file_name, s3_object_key, mime_type, uploaded_at</td>
+              </tr>
+              <tr>
+                <td><strong>chat_messages</strong></td>
+                <td><code>id (UUID)</code></td>
+                <td><code>pass_id, sender_id</code></td>
+                <td>message_type (TEXT | REPORT_REF | PRESCRIPTION_NOTE), content, created_at</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ========================================== -->
+  <!-- MODALS                                     -->
+  <!-- ========================================== -->
+
+  <!-- Modal 1: Razorpay Checkout Simulator -->
+  <div id="razorpay-modal" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 1.5rem;">💳</span>
+          <div>
+            <h3>Razorpay Payment Gateway</h3>
+            <div style="font-size: 0.75rem; color: var(--neutral-500);">Secure 256-bit Encrypted Checkout</div>
+          </div>
+        </div>
+        <button class="modal-close-btn" onclick="closeModal('razorpay-modal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="payment-summary-box">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+            <span>Consultation Plan:</span>
+            <strong>7-Day Specialist Pass</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+            <span>Assigned Specialist:</span>
+            <span>Dr. Arvind Mehta (Cardiology)</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 1.1rem; font-weight: 800; border-top: 1px solid var(--neutral-200); padding-top: 6px; margin-top: 6px;">
+            <span>Total Payable:</span>
+            <span style="color: var(--primary);">₹500.00</span>
+          </div>
+        </div>
+
+        <h4 style="font-size: 0.875rem; margin-bottom: 8px;">Select Payment Method:</h4>
+        <div class="payment-method-item selected">
+          <span>⚡</span>
+          <div>
+            <strong>Instant UPI (GPay / PhonePe / Paytm)</strong>
+            <div style="font-size: 0.75rem; color: var(--neutral-500);">Auto-approved instant webhook test mode</div>
+          </div>
+        </div>
+        <div class="payment-method-item">
+          <span>💳</span>
+          <div>
+            <strong>Debit / Credit Card (Visa / Mastercard / RuPay)</strong>
+            <div style="font-size: 0.75rem; color: var(--neutral-500);">Zero surcharge</div>
+          </div>
+        </div>
+        <div class="payment-method-item">
+          <span>🏦</span>
+          <div>
+            <strong>NetBanking</strong>
+            <div style="font-size: 0.75rem; color: var(--neutral-500);">SBI, HDFC, ICICI, Axis</div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('razorpay-modal')">Cancel</button>
+        <button id="razorpay-pay-button" class="btn btn-success" onclick="processSimulatedPayment()">
+          Pay ₹500 & Activate Pass
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: Medical Report Previewer -->
+  <div id="report-preview-modal" class="modal-backdrop">
+    <div class="modal-dialog" style="max-width: 640px;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 1.5rem;">🔒</span>
+          <div>
+            <h3 id="preview-modal-title">Diagnostic Document</h3>
+            <div style="font-size: 0.75rem; color: var(--neutral-500);">Short-Lived Authorized S3 Access</div>
+          </div>
+        </div>
+        <button class="modal-close-btn" onclick="closeModal('report-preview-modal')">&times;</button>
+      </div>
+      <div id="preview-modal-body" class="modal-body">
+        <!-- Rendered by JS -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" onclick="closeModal('report-preview-modal')">Close Preview</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 3: Upload Report Modal -->
+  <div id="upload-report-modal" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>Upload Medical Diagnostic Report</h3>
+        <button class="modal-close-btn" onclick="closeModal('upload-report-modal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="margin-bottom: 1rem;">
+          <label style="display: block; font-size: 0.8125rem; font-weight: 600; margin-bottom: 4px;">Document Title / Test Name</label>
+          <input type="text" id="upload-doc-title" class="chat-input" style="width: 100%; border-radius: 8px;" placeholder="e.g. Complete Blood Count (CBC) or Echocardiogram" value="Follow-up Echocardiogram & Doppler">
+        </div>
+        <div style="margin-bottom: 1rem;">
+          <label style="display: block; font-size: 0.8125rem; font-weight: 600; margin-bottom: 4px;">Report Category</label>
+          <select id="upload-doc-type" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--neutral-300);">
+            <option value="LAB_REPORT">Blood / Lab Report</option>
+            <option value="CARDIOLOGY_TRACE">ECG / Echo / Cardiac Scan</option>
+            <option value="PRESCRIPTION">Prior Hospital Prescription</option>
+            <option value="RADIOLOGY">X-Ray / MRI / CT Scan</option>
+          </select>
+        </div>
+        <div style="margin-bottom: 1rem;">
+          <label style="display: block; font-size: 0.8125rem; font-weight: 600; margin-bottom: 4px;">Key Findings / Patient Note</label>
+          <textarea id="upload-doc-summary" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--neutral-300); height: 80px;" placeholder="Key values or doctor instructions...">Left ventricular ejection fraction (LVEF): 58%, normal chamber dimensions, trivial mitral regurgitation.</textarea>
+        </div>
+        <div style="font-size: 0.75rem; color: #0284c7; background: #e0f2fe; padding: 8px; border-radius: 6px;">
+          🛡️ Uploads go straight to S3 with AES-256 server-side encryption via pre-signed URL.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('upload-report-modal')">Cancel</button>
+        <button class="btn btn-primary" onclick="
+          const title = document.getElementById('upload-doc-title').value;
+          const type = document.getElementById('upload-doc-type').value;
+          const summary = document.getElementById('upload-doc-summary').value;
+          store.uploadReport(title, type, summary);
+          closeModal('upload-report-modal');
+        ">Upload to S3 Vault</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 4: AI Pre-Consultation Triage Modal -->
+  <div id="ai-triage-modal" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 1.5rem;">🤖</span>
+          <div>
+            <h3>AI Clinical Symptom Intake</h3>
+            <div style="font-size: 0.75rem; color: var(--neutral-500);">Automated summary prepared for doctor review</div>
+          </div>
+        </div>
+        <button class="modal-close-btn" onclick="closeModal('ai-triage-modal')">&times;</button>
+      </div>
+      <form onsubmit="submitAiTriage(event)">
+        <div class="modal-body">
+          <div style="margin-bottom: 1rem;">
+            <label style="display: block; font-size: 0.8125rem; font-weight: 600; margin-bottom: 4px;">Primary Follow-up Concern</label>
+            <input type="text" id="triage-reason" class="chat-input" style="width: 100%; border-radius: 8px;" value="Medication dosage adjustment after mild dizziness on morning walks">
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <label style="display: block; font-size: 0.8125rem; font-weight: 600; margin-bottom: 4px;">Current Medications & Frequency</label>
+            <input type="text" id="triage-meds" class="chat-input" style="width: 100%; border-radius: 8px;" value="Telmisartan 40mg (1-0-0), Rosuvastatin 10mg (0-0-1), Aspirin 75mg (0-1-0)">
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <label style="display: block; font-size: 0.8125rem; font-weight: 600; margin-bottom: 4px;">Symptom Severity / Score</label>
+            <select id="triage-severity" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--neutral-300);">
+              <option value="Mild (Score 2/10)">Mild — Routine Follow-up (Score 2/10)</option>
+              <option value="Moderate (Score 5/10)">Moderate — Periodic discomfort (Score 5/10)</option>
+              <option value="Severe (Score 8/10)">Urgent — Needs immediate clinical review (Score 8/10)</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeModal('ai-triage-modal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Generate & Share AI Intake</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 5: Digital E-Prescription Generator (Doctor) -->
+  <div id="prescription-modal" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 1.5rem;">📋</span>
+          <div>
+            <h3>Generate Digital E-Prescription</h3>
+            <div style="font-size: 0.75rem; color: var(--neutral-500);">Signed under MCI Registration MCI-28491-DEL</div>
+          </div>
+        </div>
+        <button class="modal-close-btn" onclick="closeModal('prescription-modal')">&times;</button>
+      </div>
+      <form onsubmit="submitPrescriptionForm(event)">
+        <div class="modal-body">
+          <div style="margin-bottom: 1rem;">
+            <label style="display: block; font-size: 0.8125rem; font-weight: 600; margin-bottom: 4px;">Prescribed Medications & Dosages (Rx)</label>
+            <textarea id="rx-medications" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--neutral-300); height: 100px; font-family: inherit;">1. Tab. Telmisartan 20mg (Half tablet) — 1-0-0 (Morning after breakfast) for 14 days
+2. Tab. Rosuvastatin 10mg — 0-0-1 (Night after dinner) for 30 days
+3. Tab. Ecosprin 75mg — 0-1-0 (After lunch) for 30 days</textarea>
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <label style="display: block; font-size: 0.8125rem; font-weight: 600; margin-bottom: 4px;">Clinical Advice & Dietary Guidelines</label>
+            <textarea id="rx-advice" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--neutral-300); height: 80px; font-family: inherit;">• Keep well-hydrated (2.5L water/day).
+• Re-check home BP twice weekly in seated position.
+• Low sodium diet (< 2g/day). Avoid fried & ultra-processed food.
+• Repeat Lipid Profile & Serum Creatinine after 6 weeks.</textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeModal('prescription-modal')">Cancel</button>
+          <button type="submit" class="btn btn-success">Sign & Deliver E-Prescription</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 6: Printable Prescription Receipt -->
+  <div id="printable-prescription-modal" class="modal-backdrop">
+    <div class="modal-dialog" style="max-width: 680px;">
+      <div class="modal-header">
+        <h3>Official Prescription Slip</h3>
+        <button class="modal-close-btn" onclick="closeModal('printable-prescription-modal')">&times;</button>
+      </div>
+      <div id="printable-prescription-body" class="modal-body">
+        <!-- Rendered by JS -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('printable-prescription-modal')">Close</button>
+        <button class="btn btn-primary" onclick="window.print()">🖨️ Print Prescription / Save as PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 7: Doctor Profile Modal -->
+  <div id="doctor-profile-modal" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="doc-profile-modal-name">Doctor Profile</h3>
+        <button class="modal-close-btn" onclick="closeModal('doctor-profile-modal')">&times;</button>
+      </div>
+      <div id="doc-profile-modal-body" class="modal-body">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 8: Admin Onboard Doctor Modal -->
+  <div id="doctor-onboard-modal" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>Onboard & Verify Specialist</h3>
+        <button class="modal-close-btn" onclick="closeModal('doctor-onboard-modal')">&times;</button>
+      </div>
+      <form onsubmit="submitDoctorOnboard(event)">
+        <div class="modal-body">
+          <div style="margin-bottom: 0.75rem;">
+            <label style="display: block; font-size: 0.8125rem; font-weight: 600; margin-bottom: 4px;">Full Name</label>
+            <input type="text" id="onboard-doc-name" class="chat-input" style="width: 100%; border-radius: 8px;" placeholder="Dr. Ankit Saxena" required>
+          </div>
+          <div style="margin-bottom: 0.75rem;">
+            <label style="display: block; font-size: 0.8125rem; font-weight: 600; margin-bottom: 4px;">Designation & Specialization</label>
+            <input type="text" id="onboard-doc-title" class="chat-input" style="width: 100%; border-radius: 8px;" placeholder="Consultant Neurologist" required>
+          </div>
+          <div style="margin-bottom: 0.75rem;">
+            <label style="display: block; font-size: 0.8125rem; font-weight: 600; margin-bottom: 4px;">Medical Qualifications</label>
+            <input type="text" id="onboard-doc-quals" class="chat-input" style="width: 100%; border-radius: 8px;" placeholder="MBBS, MD, DM (Neurology)" required>
+          </div>
+          <div style="margin-bottom: 0.75rem;">
+            <label style="display: block; font-size: 0.8125rem; font-weight: 600; margin-bottom: 4px;">State / Medical Council Reg. Number</label>
+            <input type="text" id="onboard-doc-reg" class="chat-input" style="width: 100%; border-radius: 8px;" placeholder="MCI-65239-DEL" required>
+          </div>
+          <div style="margin-bottom: 0.75rem;">
+            <label style="display: block; font-size: 0.8125rem; font-weight: 600; margin-bottom: 4px;">Department</label>
+            <input type="text" id="onboard-doc-dept" class="chat-input" style="width: 100%; border-radius: 8px;" placeholder="Neurology" required>
+          </div>
+          <div style="margin-bottom: 0.75rem;">
+            <label style="display: block; font-size: 0.8125rem; font-weight: 600; margin-bottom: 4px;">Hospital</label>
+            <input type="text" id="onboard-doc-hospital" class="chat-input" style="width: 100%; border-radius: 8px;" value="Metro Care Super-Speciality Hospital" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeModal('doctor-onboard-modal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Verify & Add Doctor</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- App Script -->
+  <script src="app.js"></script>
+</body>
+</html>

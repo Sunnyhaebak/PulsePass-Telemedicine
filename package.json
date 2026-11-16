@@ -1,0 +1,38 @@
+{
+  "name": "pulsepass-telemedicine",
+  "version": "1.0.0",
+  "description": "Production-grade Full-Stack Telemedicine & Outpatient Consultation Platform",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev": "npm run dev:backend & npm run dev:frontend",
+    "dev:backend": "npm --workspace=backend run start:dev",
+    "dev:frontend": "npm --workspace=frontend run dev",
+    "build": "npm run build:backend && npm run build:frontend",
+    "build:backend": "npm --workspace=backend run build",
+    "build:frontend": "npm --workspace=frontend run build",
+    "start:backend": "npm --workspace=backend run start:prod",
+    "start:frontend": "npm --workspace=frontend run start",
+    "test": "npm --workspace=backend run test && npm --workspace=frontend run test",
+    "prisma:generate": "npm --workspace=backend run prisma:generate",
+    "prisma:push": "npm --workspace=backend run prisma:push",
+    "docker:build": "docker compose build",
+    "docker:up": "docker compose up --build",
+    "docker:down": "docker compose down"
+  },
+  "keywords": [
+    "telemedicine",
+    "nestjs",
+    "nextjs",
+    "typescript",
+    "postgresql",
+    "redis",
+    "socketio",
+    "docker"
+  ],
+  "author": "",
+  "license": "UNLICENSED"
+}
