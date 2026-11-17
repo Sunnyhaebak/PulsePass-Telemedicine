@@ -28,7 +28,7 @@
 
 ## 🌐 Overview
 
-**PulsePass** is a production-ready telemedicine platform enabling patients to book outpatient consultations, chat in real-time with doctors, manage 7-day passes, and securely upload medical reports to an AWS S3 vault.
+**PulsePass** is a production - ready telemedicine platform enabling patients to book outpatient consultations, chat in real-time with doctors, manage 7-day passes, and securely upload medical reports to an AWS S3 vault.
 
 | Portal | URL | Description |
 |---|---|---|
